@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Eye, EyeOff, Mail, Lock, Star, Zap, Bot, Users, Briefcase } from 'lucide-react';
-import './Signin.css';
+import React, { useState } from "react";
+import { Eye, EyeOff, Mail, Lock, Star } from "lucide-react";
+import "./Signin.css";
 
 interface SignInForm {
   email: string;
@@ -10,8 +10,8 @@ interface SignInForm {
 
 export default function SignInPage() {
   const [formData, setFormData] = useState<SignInForm>({
-    email: '',
-    password: '',
+    email: "",
+    password: "",
     rememberMe: false,
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -20,10 +20,10 @@ export default function SignInPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     // Simulate API call
     setTimeout(() => {
-      console.log('Sign in attempt:', formData);
+      console.log("Sign in attempt:", formData);
       setIsLoading(false);
       // In real app, you would redirect to dashboard here
     }, 1500);
@@ -31,15 +31,14 @@ export default function SignInPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
   return (
     <div className="min-h-screen bg-gray-900 text-white items-center flex">
-
       {/* Right Side - Sign In Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 ">
         <div className="w-full max-w-md">
@@ -56,12 +55,17 @@ export default function SignInPage() {
           <div className="bg-gray-800 rounded-2xl shadow-2xl p-8 border border-gray-700">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-white mb-2">Sign In</h2>
-              <p className="text-gray-400">Enter your credentials to access your dashboard</p>
+              <p className="text-gray-400">
+                Enter your credentials to access your dashboard
+              </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-300 mb-2"
+                >
                   Email Address
                 </label>
                 <div className="relative">
@@ -80,7 +84,10 @@ export default function SignInPage() {
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-300 mb-2"
+                >
                   Password
                 </label>
                 <div className="relative">
@@ -88,7 +95,7 @@ export default function SignInPage() {
                   <input
                     id="password"
                     name="password"
-                    type={showPassword ? 'text' : 'password'}
+                    type={showPassword ? "text" : "password"}
                     required
                     value={formData.password}
                     onChange={handleChange}
@@ -100,7 +107,11 @@ export default function SignInPage() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition"
                   >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -114,10 +125,15 @@ export default function SignInPage() {
                     onChange={handleChange}
                     className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
                   />
-                  <span className="ml-2 text-sm text-gray-300">Remember me</span>
+                  <span className="ml-2 text-sm text-gray-300">
+                    Remember me
+                  </span>
                 </label>
-                
-                <button type="button" className="text-sm text-blue-400 hover:text-blue-300 transition">
+
+                <button
+                  type="button"
+                  className="text-sm text-blue-400 hover:text-blue-300 transition"
+                >
                   Forgot password?
                 </button>
               </div>
@@ -133,14 +149,14 @@ export default function SignInPage() {
                     Signing in...
                   </div>
                 ) : (
-                  'Sign In'
+                  "Sign In"
                 )}
               </button>
             </form>
 
             <div className="mt-6 text-center">
               <p className="text-gray-400">
-                Don't have an account?{' '}
+                Don't have an account?{" "}
                 <button className="text-blue-400 hover:text-blue-300 font-semibold transition">
                   Contact Administrator
                 </button>
@@ -150,15 +166,16 @@ export default function SignInPage() {
             {/* Demo Credentials */}
             <div className="mt-8 p-4 bg-gray-700/50 rounded-lg">
               <p className="text-sm text-gray-300 text-center">
-                <strong>Demo Access:</strong><br />
-                Email: aisha.jele@lightstars.co.za<br />
+                <strong>Demo Access:</strong>
+                <br />
+                Email: aisha.jele@lightstars.co.za
+                <br />
                 Password: ••••••••
               </p>
             </div>
           </div>
         </div>
       </div>
-
     </div>
   );
 }
