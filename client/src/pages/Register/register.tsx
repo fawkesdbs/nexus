@@ -12,6 +12,8 @@ import {
   Users,
   CheckCircle,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom"; //
+import { useAuth } from "../../contexts/AuthContext"; //
 
 interface RegisterForm {
   firstName: string;
@@ -25,6 +27,9 @@ interface RegisterForm {
 }
 
 export default function RegisterPage() {
+  const navigate = useNavigate(); //
+  const { login } = useAuth(); //
+
   const [formData, setFormData] = useState<RegisterForm>({
     firstName: "",
     lastName: "",
@@ -39,6 +44,7 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(1);
+  const [error, setError] = useState(""); // Added error state
 
   const departments = [
     "Cloud Operations",
@@ -54,13 +60,48 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError("");
 
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Registration attempt:", formData);
+    // Map UI fields to Backend expected fields
+    const payload = {
+      first_name: formData.firstName,
+      last_name: formData.lastName,
+      email: formData.email,
+      password: formData.password,
+      phone_number: formData.phone,
+    };
+
+    try {
+      // Logic adapted from Register.tsx
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const text = await response.text();
+      if (!text) throw new Error("Empty response from server");
+
+      const data = JSON.parse(text);
+
+      if (!response.ok) {
+        throw new Error(data.error || "Registration failed");
+      }
+
+      login(data.token, data.user);
+      navigate("/dashboard");
+    } catch (err: unknown) {
+      console.error("Register Error:", err);
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("An unexpected error occurred");
+      }
+    } finally {
       setIsLoading(false);
-      // In real app, you would redirect to verification or dashboard
-    }, 2000);
+    }
   };
 
   const handleChange = (
@@ -407,7 +448,10 @@ export default function RegisterPage() {
         <div className="text-sm text-gray-400">
           <p>
             Already have an account?{" "}
-            <button className="text-blue-400 hover:text-blue-300 underline">
+            <button
+              onClick={() => navigate("/signin")}
+              className="text-blue-400 hover:text-blue-300 underline"
+            >
               Sign in here
             </button>
           </p>
@@ -426,6 +470,13 @@ export default function RegisterPage() {
               </h1>
             </div>
           </div>
+
+          {/* Error Message Display */}
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/50 text-red-500 p-3 rounded mb-4 text-sm">
+              {error}
+            </div>
+          )}
 
           <div className="bg-gray-800 rounded-2xl shadow-2xl p-8 border border-gray-700">
             {/* Progress Steps */}
@@ -489,7 +540,10 @@ export default function RegisterPage() {
             <div className="lg:hidden text-center mt-6 pt-4 border-t border-gray-700">
               <p className="text-sm text-gray-400">
                 Already have an account?{" "}
-                <button className="text-blue-400 hover:text-blue-300 font-semibold transition">
+                <button
+                  onClick={() => navigate("/signin")}
+                  className="text-blue-400 hover:text-blue-300 font-semibold transition"
+                >
                   Sign in
                 </button>
               </p>

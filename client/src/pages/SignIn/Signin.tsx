@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Eye, EyeOff, Mail, Lock, Star } from "lucide-react";
 import "./Signin.css";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 
 interface SignInForm {
   email: string;
@@ -9,6 +11,9 @@ interface SignInForm {
 }
 
 export default function SignInPage() {
+  const navigate = useNavigate();
+  const { login } = useAuth(); //
+
   const [formData, setFormData] = useState<SignInForm>({
     email: "",
     password: "",
@@ -16,17 +21,43 @@ export default function SignInPage() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(""); // Added error state from Login logic
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError("");
 
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Sign in attempt:", formData);
+    try {
+      // Logic adapted from Login.tsx
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Login failed");
+      }
+
+      // Authenticate using context and redirect
+      login(data.token, data.user);
+      navigate("/dashboard");
+    } catch (err: unknown) {
+      console.error("Login Error:", err);
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("An unexpected error occurred");
+      }
+    } finally {
       setIsLoading(false);
-      // In real app, you would redirect to dashboard here
-    }, 1500);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,6 +90,13 @@ export default function SignInPage() {
                 Enter your credentials to access your dashboard
               </p>
             </div>
+
+            {/* Error Message Display */}
+            {error && (
+              <div className="bg-red-500/10 border border-red-500/50 text-red-500 p-3 rounded mb-4 text-sm">
+                {error}
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
@@ -157,20 +195,12 @@ export default function SignInPage() {
             <div className="mt-6 text-center">
               <p className="text-gray-400">
                 Don't have an account?{" "}
-                <button className="text-blue-400 hover:text-blue-300 font-semibold transition">
-                  Contact Administrator
+                <button
+                  onClick={() => navigate("/register")}
+                  className="text-blue-400 hover:text-blue-300 font-semibold transition"
+                >
+                  Create Account
                 </button>
-              </p>
-            </div>
-
-            {/* Demo Credentials */}
-            <div className="mt-8 p-4 bg-gray-700/50 rounded-lg">
-              <p className="text-sm text-gray-300 text-center">
-                <strong>Demo Access:</strong>
-                <br />
-                Email: aisha.jele@lightstars.co.za
-                <br />
-                Password: ••••••••
               </p>
             </div>
           </div>

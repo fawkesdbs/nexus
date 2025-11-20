@@ -25,6 +25,8 @@ import {
   Clock,
   UserPlus,
 } from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 // --- Type Definitions ---
 
@@ -1286,9 +1288,13 @@ export default function App() {
     }
   };
 
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  console.log(user);
+
   const handleLogout = () => {
-    const modal = document.getElementById("logout-modal");
-    if (modal) modal.style.display = "flex";
+    logout();
+    navigate("/login");
   };
 
   const closeModal = () => {
