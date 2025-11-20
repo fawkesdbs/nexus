@@ -7,9 +7,10 @@ import {
 import React from "react";
 import { useAuth } from "./contexts/AuthContext";
 import { AuthProvider } from "./contexts/AuthProvider";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Dashboard from "./pages/Dashboard";
+import Landing from './pages/Landing/landing';
+import Dashboard from './pages/Dashboard/Dashboard';
+import SignInPage from './pages/SignIn/Signin';
+import Register from './pages/Register/register';
 import { ThemeToggle } from "./components/ThemeToggle";
 
 // Helper component to protect routes
@@ -32,7 +33,8 @@ function App() {
       <div className="relative min-h-screen w-full bg-background transition-colors">
         <Router>
           <Routes>
-            <Route path="/login" element={<Login />} />
+            <Route path="/" element={<Landing />} />
+            <Route path="/signin" element={<SignInPage />} />
             <Route path="/register" element={<Register />} />
             <Route
               path="/dashboard"
@@ -42,7 +44,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route path="*" element={<Navigate to="/login" />} />
+            <Route path="*" element={<Navigate to="/signin" />} />
           </Routes>
         </Router>
 
