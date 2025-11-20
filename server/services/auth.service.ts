@@ -3,7 +3,7 @@ import { User } from "../types/user";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "default_secret";
+const JWT_SECRET = process.env.JWT_SECRET as string;
 
 export const registerUser = async (
   email: string,
