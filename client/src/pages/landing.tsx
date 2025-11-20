@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Sparkles, Star, LogIn, Menu } from 'lucide-react';
-
+import {ThemeToggle} from '../components/ThemeToggle';
 
 function landing() 
  {
@@ -34,6 +34,10 @@ return(
           {/* <LogIn className="w-6 h-6" /> */}
           <span>Get Started</span>
         </button>
+
+        <div className="absolute bottom-6 right-6">
+          <ThemeToggle />
+        </div>
       </section>
       
      
