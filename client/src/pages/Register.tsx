@@ -9,8 +9,8 @@ export default function Register() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    name: "",
-    surname: "",
+    first_name: "", // Changed from name
+    last_name: "", // Changed from surname
     phone_number: "",
   });
   const [error, setError] = useState("");
@@ -56,7 +56,9 @@ export default function Register() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background text-foreground transition-colors">
       <div className="w-full max-w-md p-8 bg-card text-card-foreground rounded-lg shadow-lg border border-accent">
-        <h2 className="text-2xl font-bold text-center mb-6">Create Account</h2>
+        <h2 className="text-2xl font-bold text-center mb-6">
+          Create Employee Account
+        </h2>
 
         {error && (
           <div className="bg-red-500/10 border border-red-500/50 text-red-500 p-3 rounded mb-4 text-sm">
@@ -67,18 +69,22 @@ export default function Register() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Name</label>
+              <label className="block text-sm font-medium mb-1">
+                First Name
+              </label>
               <input
-                name="name"
+                name="first_name"
                 onChange={handleChange}
                 className="w-full p-2 rounded bg-background border border-accent text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Surname</label>
+              <label className="block text-sm font-medium mb-1">
+                Last Name
+              </label>
               <input
-                name="surname"
+                name="last_name"
                 onChange={handleChange}
                 className="w-full p-2 rounded bg-background border border-accent text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 required

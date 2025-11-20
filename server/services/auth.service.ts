@@ -9,12 +9,16 @@ export const registerUser = async (
   email: string,
   password: string,
   phone_number: string,
-  name: string,
-  surname: string
+  first_name: string,
+  last_name: string
 ): Promise<User> => {
   const client = await pool.connect();
   try {
-    const checkUser = await client.query('SELECT * FROM users WHERE email = $1', [email]);
+    // Check against 'employees' table
+    const checkUser = await client.query(
+      "SELECT * FROM employees WHERE email = $1",
+      [email]
+    );
     if (checkUser.rows.length > 0) {
       throw new Error("User already registered");
     }
@@ -22,12 +26,13 @@ export const registerUser = async (
     const salt = await bcrypt.genSalt(10);
     const password_hash = await bcrypt.hash(password, salt);
 
+    // Insert into 'employees' with new column names
     const query = `
-      INSERT INTO users (name, surname, email, password_hash, phone_number)
+      INSERT INTO employees (first_name, last_name, email, password_hash, phone_number)
       VALUES ($1, $2, $3, $4, $5)
-      RETURNING id, name, surname, email, created_at, phone_number;
+      RETURNING id, first_name, last_name, email, phone_number, created_at;
     `;
-    const values = [name, surname, email, password_hash, phone_number];
+    const values = [first_name, last_name, email, password_hash, phone_number];
     const result = await client.query(query, values);
 
     return result.rows[0];
@@ -40,7 +45,10 @@ export const loginUser = async (
   email: string,
   password: string
 ): Promise<{ token: string; user: User }> => {
-  const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+  // Query 'employees' table
+  const result = await pool.query("SELECT * FROM employees WHERE email = $1", [
+    email,
+  ]);
   const user = result.rows[0];
 
   if (!user) {
@@ -52,7 +60,7 @@ export const loginUser = async (
     throw new Error("Invalid email or password");
   }
 
-  // Remove sensitive data before returning
+  // Remove sensitive data
   delete (user as any).password_hash;
 
   const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
@@ -63,6 +71,10 @@ export const loginUser = async (
 };
 
 export const getUserById = async (id: string): Promise<User | null> => {
-  const result = await pool.query('SELECT id, name, surname, email, created_at FROM users WHERE id = $1', [id]);
+  // Fetch employee details
+  const result = await pool.query(
+    "SELECT id, first_name, last_name, email, phone_number, company_name, department, role, created_at FROM employees WHERE id = $1",
+    [id]
+  );
   return result.rows[0] || null;
 };

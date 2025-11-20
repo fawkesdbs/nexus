@@ -3,10 +3,10 @@ import * as authService from "../services/auth.service";
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const { email, password, phone_number, name, surname } = req.body;
+    // Destructure new fields (first_name, last_name) instead of name/surname
+    const { email, password, phone_number, first_name, last_name } = req.body;
 
-    // Basic validation
-    if (!email || !password || !phone_number || !name || !surname) {
+    if (!email || !password || !phone_number || !first_name || !last_name) {
       return res.status(400).json({ error: "All fields are required" });
     }
 
@@ -14,8 +14,8 @@ export const register = async (req: Request, res: Response) => {
       email,
       password,
       phone_number,
-      name,
-      surname
+      first_name,
+      last_name
     );
 
     return res
@@ -48,7 +48,6 @@ export const login = async (req: Request, res: Response) => {
     return res.status(200).json({ token, user });
   } catch (err: any) {
     console.error("Login controller error:", err);
-    // Return a generic error to avoid revealing whether an email exists.
     return res.status(401).json({ error: "Invalid email or password" });
   }
 };
