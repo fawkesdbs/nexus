@@ -4,16 +4,16 @@ import { Camera, Edit2, Mail, Phone, Building2, Hash, Briefcase, UserRound, User
 
 // Dummy data for the profile (as shown in your image)
 const initialProfileData = {
-  fullName: "Aisha Jele",
-  role: "Senior Data Architect",
+  fullName: "",
+  role: "",
   companyName: "LightStars Technology Inc.",
-  firstName: "Aisha",
-  lastName: "Jele",
-  gender: "Female",
-  email: "aisha.jele@lightstars.co.za",
-  phoneNumber: "+27 82 555 1234",
-  department: "Cloud Operations",
-  employeeNumber: "LS-9001",
+  firstName: "",
+  lastName: "",
+  gender: "",
+  email: "",
+  phoneNumber: "",
+  department: "",
+  employeeNumber: "",
   profilePicture: null, // Placeholder for uploaded image
 };
 
