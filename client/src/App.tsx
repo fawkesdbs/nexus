@@ -16,6 +16,7 @@ import Dashboard from "./pages/Dashboard/Dashboard";
 import SignInPage from "./pages/SignIn/Signin";
 import Register from "./pages/Register/register";
 import { ThemeToggle } from "./components/ThemeToggle";
+import Calendar from "./pages/Calender/Calender";
 
 // Helper component to protect routes
 const ProtectedRoute = ({ children }: { children: React.ReactElement }) => {
@@ -28,7 +29,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactElement }) => {
       </div>
     );
 
-  return isAuthenticated ? children : <Navigate to="/login" />;
+  return isAuthenticated ? children : <Navigate to="/signin" />;
 };
 
 function App() {
@@ -67,6 +68,14 @@ function App() {
                 }
               />
               <Route
+                path="/calender"
+                element={
+                  <ProtectedRoute>
+                    <Calendar />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/profile"
                 element={
                   <ProtectedRoute>
@@ -83,7 +92,7 @@ function App() {
             <Route path="/profile" element={<Profile/>} />
             </Route> 
 
-            <Route path="*" element={<Navigate to="/signin" />} />
+            <Route path="*" element={<Navigate to="/signin" />} />*/}
           </Routes>
         </Router>
 
