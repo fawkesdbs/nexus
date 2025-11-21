@@ -79,9 +79,9 @@ function App() {
             {/* <Route element={<Layout/>}>
             <Route path="/dashboard" element={<Dashboard/>} />
             <Route path="/learn" element={<Learn/>} />
-            <Route path="/feedback" element={<Feedback/>} />
+            <Route path="/calender" element={<Calender/>} />
             <Route path="/profile" element={<Profile/>} />
-            </Route> */}
+            </Route> 
 
             <Route path="*" element={<Navigate to="/signin" />} />
           </Routes>

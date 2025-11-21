@@ -1,12 +1,5 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import {
-  Star,
-  LayoutDashboard,
-  BookOpen,
-  MessageSquare,
-  User,
-  LogOut,
-} from "lucide-react";
+import { Star, LayoutDashboard, BookOpen, MessageSquare, User, LogOut, Calendar, icons } from "lucide-react";
 import { useState, useEffect } from "react";
 
 export default function Layout() {
@@ -19,6 +12,7 @@ export default function Layout() {
     { icon: BookOpen, label: "Learn a Skill", path: "/learn" },
     { icon: MessageSquare, label: "Feedback", path: "/feedback" },
     { icon: User, label: "Profile", path: "/profile" },
+    { icon: Calendar, label: "Calendar", path: "/calender" },
   ];
 
   useEffect(() => {
