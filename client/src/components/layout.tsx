@@ -1,5 +1,5 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Star, LayoutDashboard, BookOpen, MessageSquare, User, LogOut, Calendar, icons } from "lucide-react";
+import { Star, LayoutDashboard, BookOpen, MessageSquare, User, LogOut, Calendar, icons, MessageCircleCode } from "lucide-react";
 import { useState, useEffect } from "react";
 
 export default function Layout() {
@@ -13,6 +13,8 @@ export default function Layout() {
     { icon: MessageSquare, label: "Feedback", path: "/feedback" },
     { icon: User, label: "Profile", path: "/profile" },
     { icon: Calendar, label: "Calendar", path: "/calender" },
+    { icon: MessageCircleCode, label: "AI Assistant", path: "/ai-assistant" },
+
   ];
 
   useEffect(() => {
