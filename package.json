@@ -10,16 +10,13 @@
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "concurrently \"npm --workspace=server run dev\" \"npm --workspace=client run dev\""
+    "dev": "concurrently \"npm --workspace=server run dev\" \"npm --workspace=client run dev\" \"cd api && venv/Scripts/python.exe app.py\""
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@react-oauth/google": "^0.12.2",
-    "concurrently": "^9.2.1",
-    "dotenv": "^17.2.3",
-    "gapi-script": "^1.2.0"
+    "concurrently": "^9.2.1"
   }
 }
