@@ -99,6 +99,28 @@ const Feedback = () => {
                             If you require a direct response, please ensure your profile information (email/phone) is up-to-date.
                         </p>
                     </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Events Sidebar */}
+          <div className="xl:col-span-1 space-y-6">
+            {/* Upcoming Events */}
+            <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-white flex items-center">
+                  <Clock className="w-5 h-5 text-blue-400 mr-2" />
+                  Upcoming Events
+                </h3>
+                <button
+                  onClick={loadEvents}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  <Download className="w-4 h-4" />
+                </button>
+              </div>
 
                     {/* 4. Submission Button */}
                     <button
@@ -118,7 +140,9 @@ const Feedback = () => {
                 </form>
             </div>
         </div>
-    );
+      )}
+    </div>
+  );
 };
 
 export default Feedback;

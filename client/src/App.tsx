@@ -4,17 +4,17 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import React, { useEffect } from "react";
+import React from "react";
 import { useAuth } from "./contexts/AuthContext";
 import { AuthProvider } from "./contexts/AuthProvider";
-import Landing from './pages/Landing/landing';
-import Layout from './components/layout';
-import Learn from './pages/learn/Learn';
-import Calender from './pages/Calender/Calender';
-import Profile from './pages/Profile/Profile';
-import Dashboard from './pages/Dashboard/Dashboard';
-import SignInPage from './pages/SignIn/Signin';
-import Register from './pages/Register/register';
+import Landing from "./pages/Landing/landing";
+import Layout from "./components/layout";
+import Learn from "./pages/learn/Learn";
+import Feedback from "./pages/Feedback/feedback";
+import Profile from "./pages/Profile/Profile";
+import Dashboard from "./pages/Dashboard/Dashboard";
+import SignInPage from "./pages/SignIn/Signin";
+import Register from "./pages/Register/register";
 import { ThemeToggle } from "./components/ThemeToggle";
 
 // Helper component to protect routes
@@ -31,7 +31,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactElement }) => {
   return isAuthenticated ? children : <Navigate to="/login" />;
 };
 
-
 function App() {
   return (
     <AuthProvider>
@@ -41,22 +40,48 @@ function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/signin" element={<SignInPage />} />
             <Route path="/register" element={<Register />} />
-{/* 
-            <Route element={<Layout/>}>
-            <Route path="/dashboard" element={<ProtectedRoute><Dashboard/></ProtectedRoute>} />
-            <Route path="/learn" element={<ProtectedRoute><Learn/></ProtectedRoute>} />
-            <Route path="/feedback" element={<ProtectedRoute><Feedback/></ProtectedRoute>} />
-            <Route path="/profile" element={<ProtectedRoute><Profile/></ProtectedRoute>} />
-            </Route> */}
 
+            <Route element={<Layout />}>
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/learn"
+                element={
+                  <ProtectedRoute>
+                    <Learn />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/feedback"
+                element={
+                  <ProtectedRoute>
+                    <Feedback />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
+            </Route>
 
-            <Route element={<Layout/>}>
+            {/* <Route element={<Layout/>}>
             <Route path="/dashboard" element={<Dashboard/>} />
             <Route path="/learn" element={<Learn/>} />
             <Route path="/calender" element={<Calender/>} />
             <Route path="/profile" element={<Profile/>} />
             </Route> 
-
 
             <Route path="*" element={<Navigate to="/signin" />} />
           </Routes>
@@ -72,5 +97,3 @@ function App() {
 }
 
 export default App;
-
-

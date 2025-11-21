@@ -43,10 +43,12 @@ export default function Layout() {
               <Star className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold bg-linear-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
                 Nexus
               </h1>
-              <p className="text-xs text-gray-400 mt-1">Productivity Platform</p>
+              <p className="text-xs text-gray-400 mt-1">
+                Productivity Platform
+              </p>
             </div>
           </div>
         </div>
@@ -57,20 +59,24 @@ export default function Layout() {
             {menuItems.map((item, index) => {
               const Icon = item.icon;
               const active = isActive(item.path);
-              
+
               return (
                 <li key={index}>
-                  <button 
+                  <button
                     onClick={() => handleNavigation(item.path)}
                     className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 group ${
-                      active 
-                        ? 'bg-blue-600 text-white shadow-lg' 
-                        : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                      active
+                        ? "bg-blue-600 text-white shadow-lg"
+                        : "text-gray-300 hover:bg-gray-700 hover:text-white"
                     }`}
                   >
-                    <Icon className={`w-5 h-5 transition-colors ${
-                      active ? 'text-white' : 'text-gray-400 group-hover:text-blue-400'
-                    }`} />
+                    <Icon
+                      className={`w-5 h-5 transition-colors ${
+                        active
+                          ? "text-white"
+                          : "text-gray-400 group-hover:text-blue-400"
+                      }`}
+                    />
                     <span className="font-medium">{item.label}</span>
                     {active && (
                       <div className="ml-auto w-2 h-2 bg-white rounded-full"></div>
@@ -85,18 +91,22 @@ export default function Layout() {
         {/* User Section & Logout */}
         <div className="p-6 border-t border-gray-700">
           <div className="flex items-center space-x-3 mb-4 pb-4 border-b border-gray-700">
-            <img 
-              src="https://randomuser.me/api/portraits/men/32.jpg" 
-              alt="User" 
+            <img
+              src="https://randomuser.me/api/portraits/men/32.jpg"
+              alt="User"
               className="w-10 h-10 rounded-full border-2 border-gray-600"
             />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">Jacob Wilson</p>
-              <p className="text-xs text-gray-400 truncate">Senior Data Architect</p>
+              <p className="text-sm font-medium text-white truncate">
+                Jacob Wilson
+              </p>
+              <p className="text-xs text-gray-400 truncate">
+                Senior Data Architect
+              </p>
             </div>
           </div>
-          
-          <button 
+
+          <button
             onClick={handleLogout}
             className="w-full flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-red-600 hover:text-white rounded-lg transition-all duration-200 group"
           >
