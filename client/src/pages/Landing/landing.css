@@ -1,0 +1,27 @@
+/* styles.css */
+.gradient-text {
+    background: linear-gradient(to right, #f59e0b, #f97316);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  
+  .hero-bg {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.7)), url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2072&q=80');
+    background-size: cover;
+    background-position: center;
+  }
+  
+  /* Dark mode styles */
+  .dark {
+    --color-text: hsl(0, 0%, 79%);
+    --color-background: hsl(0, 0%, 6%);
+    --color-primary: hsl(0, 0%, 36%);
+    --color-secondary: hsl(25, 76%, 30%);
+    --color-accent: hsl(25, 76%, 57%);
+  }
+  
+  body {
+    color: var(--color-text);
+    background-color: var(--color-background);
+  }

@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "concurrently \"npm --workspace=server run dev\" \"npm --workspace=client run dev\""
+    "dev": "concurrently \"npm --workspace=server run dev\" \"npm --workspace=client run dev\" \"cd api && venv/Scripts/python.exe app.py\""
   },
   "keywords": [],
   "author": "",
