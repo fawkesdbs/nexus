@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
     User, Mail, Phone, Briefcase, Users, Hash, Calendar, 
-    Edit2, Save, X, Camera, MapPin, Shield, Clock
+    Edit2, Save, X, Camera, Shield, Clock
 } from 'lucide-react';
 
 // --- Type Definitions ---
@@ -183,7 +183,7 @@ const Profile: React.FC = () => {
             <div className="max-w-6xl mx-auto">
                 {/* Header */}
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+                    <h1 className="text-3xl font-bold bg-linear-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
                         Employee Profile
                     </h1>
                     <p className="text-gray-400 mt-2">Manage your personal and professional information</p>
