@@ -17,35 +17,7 @@ import {
   Search,
   Filter,
 } from "lucide-react";
-
-interface CalendarEvent {
-  id: string;
-  summary: string;
-  description?: string;
-  start: {
-    dateTime: string;
-    timeZone?: string;
-  };
-  end: {
-    dateTime: string;
-    timeZone?: string;
-  };
-  location?: string;
-  attendees?: Array<{
-    email: string;
-    displayName?: string;
-  }>;
-}
-
-interface NewEvent {
-  title: string;
-  description: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  location: string;
-  attendees: string;
-}
+import type { CalendarEvent, NewEvent } from "../../types/calendar";
 
 const Calendar: React.FC = () => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -67,6 +39,8 @@ const Calendar: React.FC = () => {
     initGoogle();
     checkConnection();
   }, []);
+
+  // ... (rest of the implementation remains the same)
 
   const checkConnection = () => {
     const token = localStorage.getItem("google_token");
@@ -211,7 +185,7 @@ const Calendar: React.FC = () => {
     const month = currentDate.getMonth();
 
     const firstDay = new Date(year, month, 1);
-    // const lastDay = new Date(year, month + 1, 0);
+    // Removed unused 'lastDay' variable here
     const startDate = new Date(firstDay);
     startDate.setDate(startDate.getDate() - firstDay.getDay());
 
