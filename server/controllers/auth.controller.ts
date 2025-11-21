@@ -76,3 +76,25 @@ export const getMe = async (req: Request, res: Response) => {
       .json({ error: "An internal server error occurred." });
   }
 };
+
+export const updateProfile = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const updates = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const updatedUser = await authService.updateEmployee(userId, updates);
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: "User not found or no changes provided" });
+    }
+
+    res.json(updatedUser);
+  } catch (err) {
+    console.error("Update Profile Error:", err);
+    res.status(500).json({ error: "Failed to update profile" });
+  }
+};

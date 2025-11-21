@@ -78,3 +78,31 @@ export const getUserById = async (id: string): Promise<User | null> => {
   );
   return result.rows[0] || null;
 };
+
+export const updateEmployee = async (id: string, updates: Partial<User>) => {
+  // Filter out fields that shouldn't be updated directly via this route (like password, id)
+  const allowedUpdates = [
+    'first_name', 'last_name', 'phone_number', 'department', 
+    'role', 'company_name', 'gender', 'profile_picture'
+  ];
+  
+  const fieldsToUpdate = Object.keys(updates).filter(key => allowedUpdates.includes(key));
+
+  if (fieldsToUpdate.length === 0) {
+    return null;
+  }
+
+  // Build Dynamic Query
+  const setClause = fieldsToUpdate.map((field, idx) => `${field} = $${idx + 2}`).join(', ');
+  const values = [id, ...fieldsToUpdate.map(field => (updates as any)[field])];
+
+  const query = `
+    UPDATE employees 
+    SET ${setClause} 
+    WHERE id = $1 
+    RETURNING id, first_name, last_name, email, phone_number, company_name, department, role, profile_picture, created_at
+  `;
+
+  const result = await pool.query(query, values);
+  return result.rows[0];
+};

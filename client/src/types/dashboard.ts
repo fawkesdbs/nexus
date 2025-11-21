@@ -3,9 +3,10 @@ import React from 'react';
 export interface Task {
     id: string;
     title: string;
-    due: string;
-    description: string;
+    due: string; // mapped from deadline in Dashboard.tsx or formatted string
+    description: string; // mapped from details
     priority: 'high' | 'medium' | 'low' | 'at-risk';
+    status?: string; // Added status field from DB
 }
 
 export interface Meeting {
@@ -19,6 +20,7 @@ export interface Notification {
     title: string;
     message: string;
     type: 'alert' | 'info' | 'success';
+    is_read?: boolean; // Added is_read field from DB
 }
 
 export interface Mood {

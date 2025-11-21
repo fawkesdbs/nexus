@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Brain,
   Bell,
@@ -14,6 +14,7 @@ import {
   Filter,
   TrendingUp,
   Download,
+  Loader2, // Added for loading states
 } from "lucide-react";
 import type {
   Task,
@@ -27,158 +28,23 @@ import { TaskCard } from "../../components/Dashboard/TaskCard";
 import { NotificationItem } from "../../components/Dashboard/NotificationItem";
 import { EventCard } from "../../components/Dashboard/EventCard";
 import { SummaryCard } from "../../components/Dashboard/SummaryCard";
+import { useAuth } from "../../contexts/AuthContext";
 
-// --- Static Data ---
-const tasks: Task[] = [
-  {
-    id: "1",
-    title: "Client Report",
-    due: "Due in 2 days",
-    description: "High impact on team KPIs",
-    priority: "high",
-  },
-  {
-    id: "2",
-    title: "Project Planning",
-    due: "Due in 4 days",
-    description: "Requires team coordination",
-    priority: "medium",
-  },
-  {
-    id: "3",
-    title: "Email Campaign",
-    due: "Due in 5 days",
-    description: "Marketing initiative",
-    priority: "low",
-  },
-  {
-    id: "4",
-    title: "Budget Review",
-    due: "Due tomorrow",
-    description: "Requires immediate attention",
-    priority: "at-risk",
-  },
-];
+// --- Types for Chat ---
+interface ChatMessage {
+  id: string;
+  sender: "user" | "assistant";
+  text: string;
+  timestamp: Date;
+}
 
-// Applied Meeting type to fix unused variable lint error
-const meetings: { upcoming: Meeting; last: Meeting } = {
-  upcoming: {
-    title: "Client Presentation",
-    time: "Tomorrow, 10:00 AM",
-    preparation: "Prepare: Project updates, budget overview",
-  },
-  last: {
-    title: "Team Standup",
-    time: "Yesterday, 9:30 AM",
-    preparation: "Key Decisions: Move deadline to Friday, Assign QA to Sarah",
-  },
-};
-
-const notifications: Notification[] = [
-  {
-    id: "1",
-    title: "Budget Review Due Tomorrow",
-    message: "Start working on this task today",
-    type: "alert",
-  },
-  {
-    id: "2",
-    title: "Client Presentation Tomorrow",
-    message: "Prepare project updates and budget overview",
-    type: "info",
-  },
-  {
-    id: "3",
-    title: "Weekly Progress Update",
-    message: "You completed 5 tasks this week. Great job!",
-    type: "success",
-  },
-];
-
+// --- Static Data (Kept for parts not yet supported by API) ---
 const moods: Mood[] = [
   { emoji: "😊", label: "happy" },
   { emoji: "😐", label: "neutral" },
   { emoji: "😔", label: "sad" },
   { emoji: "😴", label: "tired" },
   { emoji: "😰", label: "stressed" },
-];
-
-const events: Event[] = [
-  {
-    id: "1",
-    name: "Quarterly Planning Session",
-    venue: "Conference Room A",
-    date: "2024-01-20",
-    time: "09:00 AM - 11:00 AM",
-    type: "meeting",
-    attendees: 12,
-    status: "upcoming",
-  },
-  {
-    id: "2",
-    name: "Cloud Architecture Workshop",
-    venue: "Training Center",
-    date: "2024-01-22",
-    time: "02:00 PM - 04:00 PM",
-    type: "training",
-    attendees: 25,
-    status: "upcoming",
-  },
-  {
-    id: "3",
-    name: "Project Alpha Deadline",
-    venue: "Remote",
-    date: "2024-01-25",
-    time: "05:00 PM",
-    type: "deadline",
-    attendees: 8,
-    status: "upcoming",
-  },
-  {
-    id: "4",
-    name: "Team Building Lunch",
-    venue: "The Bistro Downtown",
-    date: "2024-01-18",
-    time: "12:30 PM - 02:00 PM",
-    type: "social",
-    attendees: 15,
-    status: "ongoing",
-  },
-];
-
-const summaryData: SummaryItem[] = [
-  {
-    id: "1",
-    category: "Completed Tasks",
-    count: 15,
-    change: +12,
-    icon: CheckCircle2,
-    color: "text-green-400",
-  },
-  {
-    id: "2",
-    category: "Pending Tasks",
-    count: 8,
-    change: -3,
-    icon: Clock,
-    color: "text-yellow-400",
-  },
-  {
-    id: "3",
-    category: "Team Members",
-    count: 24,
-    change: +2,
-    icon: Users,
-    color: "text-blue-400",
-  },
-  {
-    id: "4",
-    category: "Upcoming Events",
-    count: 6,
-    change: +1,
-    icon: Calendar,
-    color: "text-purple-400",
-  },
 ];
 
 const quickActions = [
@@ -190,26 +56,163 @@ const quickActions = [
 
 // --- Main Dashboard Component ---
 const Dashboard: React.FC = () => {
+  const { user } = useAuth();
+
+  // --- Data States ---
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [lastMeeting, setLastMeeting] = useState<Meeting | null>(null);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [teamCount, setTeamCount] = useState<number>(0);
+
+  // --- UI States ---
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [chatMessage, setChatMessage] = useState("");
-  const [hasNewNotifications, setHasNewNotifications] = useState(true);
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+  const [isChatLoading, setIsChatLoading] = useState(false);
+  const [hasNewNotifications, setHasNewNotifications] = useState(false);
   const [activeEventFilter, setActiveEventFilter] = useState("all");
+  const [loading, setLoading] = useState(true);
+
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to bottom of chat when history changes
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatHistory]);
+
+  // --- API Integration ---
+  useEffect(() => {
+    const fetchData = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const headers = { Authorization: `Bearer ${token}` };
+
+      try {
+        setLoading(true);
+
+        // 1. Fetch Tasks
+        const tasksRes = await fetch("/api/tasks", { headers });
+        if (tasksRes.ok) setTasks(await tasksRes.json());
+
+        // 2. Fetch Notifications
+        const notifRes = await fetch("/api/notifications", { headers });
+        if (notifRes.ok) {
+          const notifData = await notifRes.json();
+          setNotifications(notifData);
+          if (notifData.some((n: Notification) => !n.is_read)) {
+            setHasNewNotifications(true);
+          }
+        }
+
+        // 3. Fetch Meetings
+        const meetingRes = await fetch("/api/meetings", { headers });
+        if (meetingRes.ok) {
+          const meetingsData = await meetingRes.json();
+          if (meetingsData.length > 0) {
+            const recent = meetingsData[0];
+            setLastMeeting({
+              title: recent.meeting_title,
+              time: new Date(recent.created_at).toLocaleDateString(),
+              preparation: `Key Decisions: ${
+                recent.key_decisions || "None logged"
+              }`,
+            });
+          }
+        }
+
+        // 4. Fetch Events (Internal)
+        const eventsRes = await fetch("/api/events", { headers });
+        if (eventsRes.ok) {
+          const eventsData = await eventsRes.json();
+          // Ensure dates are formatted for display
+          const formattedEvents = eventsData.map((e: Event) => ({
+            ...e,
+            date: new Date(e.date).toLocaleDateString(),
+          }));
+          setEvents(formattedEvents);
+        }
+
+        // 5. Fetch Team Stats
+        const teamRes = await fetch("/api/team/stats", { headers });
+        if (teamRes.ok) {
+          const teamData = await teamRes.json();
+          setTeamCount(teamData.count);
+        }
+      } catch (error) {
+        console.error("Dashboard data fetch error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // --- Event Handlers ---
 
   const handleMoodSelect = (mood: string) => {
     setSelectedMood(mood);
-    console.log(`Mood selected: ${mood}`);
   };
 
-  const handleSendMessage = () => {
-    if (chatMessage.trim()) {
-      console.log(`Message sent: ${chatMessage}`);
-      setChatMessage("");
+  const handleSendMessage = async () => {
+    if (!chatMessage.trim()) return;
+
+    const token = localStorage.getItem("token");
+    const userMsg: ChatMessage = {
+      id: Date.now().toString(),
+      sender: "user",
+      text: chatMessage,
+      timestamp: new Date(),
+    };
+
+    // Optimistic update
+    setChatHistory((prev) => [...prev, userMsg]);
+    setChatMessage("");
+    setIsChatLoading(true);
+
+    try {
+      const res = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ message: userMsg.text }),
+      });
+
+      if (!res.ok) throw new Error("Failed to get response");
+
+      const data = await res.json();
+
+      const aiMsg: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        sender: "assistant",
+        text: data.reply,
+        timestamp: new Date(),
+      };
+
+      setChatHistory((prev) => [...prev, aiMsg]);
+    } catch (error) {
+      console.error("AI Chat Error:", error);
+      // Add error message to chat
+      setChatHistory((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          sender: "assistant",
+          text: "Sorry, I'm having trouble connecting to the server right now.",
+          timestamp: new Date(),
+        },
+      ]);
+    } finally {
+      setIsChatLoading(false);
     }
   };
 
   const handleNotificationClick = () => {
     setHasNewNotifications(false);
-    console.log("Notifications clicked");
   };
 
   const filteredEvents = events.filter(
@@ -223,6 +226,51 @@ const Dashboard: React.FC = () => {
     { key: "deadline", label: "Deadlines" },
     { key: "social", label: "Social" },
   ];
+
+  const pendingTasksCount = tasks.length;
+
+  const summaryData: SummaryItem[] = [
+    {
+      id: "1",
+      category: "Total Tasks",
+      count: tasks.length,
+      change: +2,
+      icon: CheckCircle2,
+      color: "text-green-400",
+    },
+    {
+      id: "2",
+      category: "Pending",
+      count: pendingTasksCount,
+      change: -1,
+      icon: Clock,
+      color: "text-yellow-400",
+    },
+    {
+      id: "3",
+      category: "Team Members",
+      count: teamCount,
+      change: +0,
+      icon: Users,
+      color: "text-blue-400",
+    },
+    {
+      id: "4",
+      category: "Upcoming Events",
+      count: events.length,
+      change: +1,
+      icon: Calendar,
+      color: "text-purple-400",
+    },
+  ];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+        Loading Dashboard...
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
@@ -274,22 +322,40 @@ const Dashboard: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <h3 className="text-md font-semibold text-gray-300 mb-3">
-                    Top 3 Tasks to Focus On
+                    High Priority Focus
                   </h3>
-                  {tasks.slice(0, 3).map((task) => (
-                    <TaskCard key={task.id} task={task} />
-                  ))}
+                  {tasks.length > 0 ? (
+                    tasks
+                      .filter(
+                        (t) => t.priority === "high" || t.priority === "at-risk"
+                      )
+                      .slice(0, 3)
+                      .map((task) => <TaskCard key={task.id} task={task} />)
+                  ) : (
+                    <p className="text-gray-500 text-sm">
+                      No high priority tasks.
+                    </p>
+                  )}
                 </div>
 
                 <div>
                   <h3 className="text-md font-semibold text-gray-300 mb-3">
-                    At-Risk Tasks
+                    Other Tasks
                   </h3>
-                  {tasks
-                    .filter((task) => task.priority === "at-risk")
-                    .map((task) => (
-                      <TaskCard key={task.id} task={task} />
-                    ))}
+                  {tasks.length > 0 ? (
+                    tasks
+                      .filter(
+                        (task) =>
+                          task.priority !== "high" &&
+                          task.priority !== "at-risk"
+                      )
+                      .slice(0, 3)
+                      .map((task) => <TaskCard key={task.id} task={task} />)
+                  ) : (
+                    <p className="text-gray-500 text-sm">
+                      No other tasks pending.
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -318,9 +384,15 @@ const Dashboard: React.FC = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredEvents.map((event) => (
-                  <EventCard key={event.id} event={event} />
-                ))}
+                {filteredEvents.length > 0 ? (
+                  filteredEvents.map((event) => (
+                    <EventCard key={event.id} event={event} />
+                  ))
+                ) : (
+                  <p className="text-gray-500 text-sm col-span-2">
+                    No upcoming events found.
+                  </p>
+                )}
               </div>
             </div>
 
@@ -462,12 +534,16 @@ const Dashboard: React.FC = () => {
               </h2>
 
               <div className="space-y-3">
-                {notifications.map((notification) => (
-                  <NotificationItem
-                    key={notification.id}
-                    notification={notification}
-                  />
-                ))}
+                {notifications.length > 0 ? (
+                  notifications.map((notification) => (
+                    <NotificationItem
+                      key={notification.id}
+                      notification={notification}
+                    />
+                  ))
+                ) : (
+                  <p className="text-gray-500 text-sm">No new notifications</p>
+                )}
               </div>
             </div>
 
@@ -483,14 +559,12 @@ const Dashboard: React.FC = () => {
                   Upcoming Meeting
                 </h3>
                 <div className="bg-blue-900/30 p-4 rounded-lg border border-blue-700">
-                  <h4 className="font-bold text-white">
-                    {meetings.upcoming.title}
-                  </h4>
+                  <h4 className="font-bold text-white">Client Presentation</h4>
                   <p className="text-sm text-gray-300 mt-1">
-                    {meetings.upcoming.time}
+                    Tomorrow, 10:00 AM
                   </p>
                   <p className="text-xs text-gray-400 mt-2">
-                    {meetings.upcoming.preparation}
+                    Prepare: Project updates
                   </p>
                 </div>
               </div>
@@ -499,23 +573,25 @@ const Dashboard: React.FC = () => {
                 <h3 className="text-md font-semibold text-gray-300 mb-2">
                   Last Meeting
                 </h3>
-                <div className="bg-gray-700 p-4 rounded-lg border border-gray-600">
-                  <h4 className="font-bold text-white">
-                    {meetings.last.title}
-                  </h4>
-                  <p className="text-sm text-gray-300 mt-1">
-                    {meetings.last.time}
-                  </p>
-                  <div className="mt-2">
-                    <p className="text-xs font-semibold text-gray-300">
-                      Key Decisions:
+                {lastMeeting ? (
+                  <div className="bg-gray-700 p-4 rounded-lg border border-gray-600">
+                    <h4 className="font-bold text-white">
+                      {lastMeeting.title}
+                    </h4>
+                    <p className="text-sm text-gray-300 mt-1">
+                      {lastMeeting.time}
                     </p>
-                    <ul className="text-xs text-gray-400 list-disc pl-5 mt-1">
-                      <li>Move deadline to Friday</li>
-                      <li>Assign QA to Sarah</li>
-                    </ul>
+                    <div className="mt-2">
+                      <p className="text-xs text-gray-400">
+                        {lastMeeting.preparation}
+                      </p>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <p className="text-gray-500 text-sm">
+                    No meeting summaries found.
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -531,19 +607,53 @@ const Dashboard: React.FC = () => {
           </h2>
 
           <div className="flex flex-col md:flex-row">
-            <div className="flex-1 bg-gray-700 rounded-lg p-4 md:mr-4 mb-4 md:mb-0">
-              <div className="flex items-start mb-4">
-                <div className="bg-blue-600 p-2 rounded-lg mr-3">
-                  <Brain className="w-4 h-4 text-white" />
-                </div>
-                <div className="bg-gray-600 p-3 rounded-lg shadow-sm max-w-md">
-                  <p className="text-sm text-white">
-                    Hello! I'm your AI Task Coach. How can I help you today?
-                  </p>
-                </div>
+            <div className="flex-1 bg-gray-700 rounded-lg p-4 md:mr-4 mb-4 md:mb-0 flex flex-col h-96">
+              {/* Chat History */}
+              <div className="flex-1 overflow-y-auto mb-4 space-y-4 pr-2">
+                {chatHistory.length === 0 ? (
+                  <div className="flex items-start">
+                    <div className="bg-blue-600 p-2 rounded-lg mr-3 shrink-0">
+                      <Brain className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="bg-gray-600 p-3 rounded-lg shadow-sm max-w-md">
+                      <p className="text-sm text-white">
+                        Hello {user?.first_name}! I'm your AI Task Coach. How
+                        can I help you today?
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  chatHistory.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={`flex ${
+                        msg.sender === "user" ? "justify-end" : "justify-start"
+                      }`}
+                    >
+                      <div
+                        className={`max-w-[80%] p-3 rounded-lg shadow-sm ${
+                          msg.sender === "user"
+                            ? "bg-blue-600 text-white rounded-br-none"
+                            : "bg-gray-600 text-white rounded-tl-none"
+                        }`}
+                      >
+                        <p className="text-sm">{msg.text}</p>
+                      </div>
+                    </div>
+                  ))
+                )}
+                {isChatLoading && (
+                  <div className="flex justify-start">
+                    <div className="bg-gray-600 p-3 rounded-lg rounded-tl-none shadow-sm">
+                      <Loader2 className="w-4 h-4 animate-spin text-gray-300" />
+                    </div>
+                  </div>
+                )}
+                <div ref={chatEndRef} />
               </div>
 
-              <div className="flex">
+              {/* Input Area */}
+              <div className="flex mt-auto">
                 <input
                   type="text"
                   placeholder="Ask me anything..."
@@ -551,10 +661,12 @@ const Dashboard: React.FC = () => {
                   onChange={(e) => setChatMessage(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
                   className="flex-1 py-2 px-4 rounded-l-lg bg-gray-600 border border-gray-500 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  disabled={isChatLoading}
                 />
                 <button
                   onClick={handleSendMessage}
-                  className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-r-lg transition duration-300"
+                  disabled={isChatLoading || !chatMessage.trim()}
+                  className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-r-lg transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Send className="w-4 h-4" />
                 </button>
