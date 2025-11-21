@@ -1,202 +1,212 @@
-
-// function Feedback() {
-//   return (
-//     <div>
-//       <h1 className="text-3xl font-bold mb-4">Feedback Page</h1>
-//       <p>This is the feedback page where users can provide their feedback.</p>
-//     </div>
-//   );
-// }
-
-// export default Feedback;
-
-import React from 'react';
-import { Brain, Star, TrendingUp, CheckCircle2, Clock, X, Zap, Target, BookOpen, BarChart3 } from 'lucide-react';
-
-// --- Type Definitions (Must be defined or imported) ---
-interface PerformanceData {
-    completionRate: number;
-    avgPriority: 'High' | 'Medium' | 'Low';
-    timeSaved: number;
-    tasksCompleted: number;
-    onTimeDelivery: number;
-    selectedMood: string | null;
-}
-
-interface AIFeedbackProps {
-    performanceData: PerformanceData;
-    onClose: () => void;
-}
-
-// --- AI Feedback Generation Logic ---
+import React, { useState } from 'react';
+import { Star, BarChart3, TrendingUp, Clock4, Lightbulb, ThumbsUp, X } from 'lucide-react';
 
 /**
- * Generates an overall summary based on key metrics.
+ * --- Mock Data from Dashboard.tsx for System Feedback ---
+ * In a real application, this data would be fetched from a performance API endpoint.
  */
-const generateOverallSummary = (data: PerformanceData): { title: string, content: string, color: string } => {
-    const { completionRate, timeSaved, onTimeDelivery } = data;
-    
-    if (completionRate >= 90 && onTimeDelivery >= 90) {
-        return { 
-            title: 'Exceptional Week: High-Impact Execution!', 
-            content: `Your **${completionRate}% completion rate** combined with a high on-time delivery metric shows superb planning and execution. The ${timeSaved} hours saved through efficiency suggests you are a time management leader.`, 
-            color: 'text-green-400' 
-        };
-    } else if (completionRate >= 80 && onTimeDelivery >= 80) {
-        return { 
-            title: 'Strong Performance: Consistent & Reliable', 
-            content: `You successfully completed **${data.tasksCompleted} tasks** with great consistency. While strong, focus on the 'at-risk' tasks in the coming week to push your on-time delivery closer to 100%.`, 
-            color: 'text-yellow-400' 
-        };
-    } else {
-        return { 
-            title: 'Solid Progress: Focus on Bottlenecks', 
-            content: `Your metrics indicate some friction points. Reviewing the time sink for the past two days could help recover some of the potential ${timeSaved} hours of efficiency. Let's stabilize the completion rate.`, 
-            color: 'text-orange-400' 
-        };
-    }
+const mockPerformanceData = {
+    completionRate: '85%',
+    completionColor: 'text-green-400',
+    averagePriority: 'Medium',
+    timeSaved: '4 hrs',
+    aiRecommendation: 'Your performance dipped slightly during late afternoons (3 PM - 5 PM). Consider blocking this time for low-cognitive tasks like email sorting or brief learning modules to maintain energy.',
+    latestAchievements: [
+        'Completed client project ahead of schedule',
+        'Excellent teamwork on Project X',
+    ],
+    improvementAreas: [
+        'Time management for tight deadlines',
+        'Documentation of project processes',
+    ],
+    strengths: [
+        'Problem-solving abilities',
+        'Communication',
+    ]
 };
 
-/**
- * Provides a targeted growth recommendation based on performance and mood.
- */
-const generateGrowthRecommendation = (data: PerformanceData): string => {
-    if (data.onTimeDelivery < 80 && data.avgPriority === 'High') {
-        return "🎯 **Prioritization & Scoping**: The overlap of missed deadlines and High Priority suggests initial scoping issues. Use the first hour on Monday to create a 'non-negotiable' focus list of max 3 high-priority tasks.";
-    }
-    if (data.timeSaved < 4) {
-        return "💡 **Maximize AI Tooling**: You've saved ${data.timeSaved} hours, but there's potential for more. Try activating 'AI Draft Mode' for all internal communications to free up 15 minutes per day.";
-    }
-    if (data.selectedMood && ['stressed', 'tired'].includes(data.selectedMood)) {
-        return "🧘 **Energy Management**: Your mood tracker suggests potential burnout. Utilize the 'Schedule Meeting' function to block off a 30-minute 'Recharge' slot in the mid-afternoon. Performance follows energy.";
-    }
-    return "🚀 **Scale Your Strengths**: You are performing excellently. Your next step is mentorship: consider documenting your high-efficiency workflow and sharing it with one team member this week.";
-};
-
-/**
- * Provides feedback based on the self-reported mood.
- */
-const generateMoodFeedback = (mood: string | null): string => {
-    if (!mood) return "Log your mood daily! Correlating your feelings with productivity unlocks the deepest, most personal insights into your work-life balance.";
-    
-    switch (mood) {
-        case 'happy':
-            return "Your happy mood correlates with high task velocity! Note down what contributed to this state and aim to replicate those conditions.";
-        case 'stressed':
-            return "Stress detected. This often precedes a dip in on-time delivery. Review the 'At-Risk Tasks' now and either delegate or push a deadline to reduce pressure.";
-        case 'tired':
-            return "Tiredness usually means focus is compromised. Focus only on one important task for the next 60 minutes, then take a full 15-minute break away from your screen.";
-        default:
-            return "Consistency in tracking is key. Your current mood is logged, which is a great start for longitudinal analysis.";
-    }
-};
-
-// --- Main Component ---
-
-const AIFeedbackComponent: React.FC<AIFeedbackProps> = ({ performanceData, onClose }) => {
-    
-    const summary = generateOverallSummary(performanceData);
-    const recommendation = generateGrowthRecommendation(performanceData);
-    const moodFeedback = generateMoodFeedback(performanceData.selectedMood);
-
-    // Helper to render metric badges
-    const MetricBadge: React.FC<{ title: string, value: string | number, icon: React.ReactNode, color: string }> = ({ title, value, icon, color }) => (
-        <div className="bg-gray-700 p-5 rounded-lg border border-gray-600 flex flex-col items-start">
-            <div className={`text-sm font-medium ${color} mb-1 flex items-center`}>
-                {icon} <span className="ml-2">{title}</span>
-            </div>
-            <p className="text-3xl font-bold text-white">{value}</p>
-        </div>
+// --- Reusable Star Component (from previous Feedback component) ---
+const StarRating = ({ rating, setRating }) => {
+    const StarIcon = ({ selected, onClick }) => (
+        <svg
+            onClick={onClick}
+            className={`h-10 w-10 cursor-pointer transition-colors duration-200 ${
+                selected ? 'text-yellow-400 fill-current' : 'text-gray-600 hover:text-yellow-400'
+            }`}
+            viewBox="0 0 20 20"
+            fill="currentColor"
+        >
+            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.8-2.034c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+        </svg>
     );
 
     return (
-        <div className="flex flex-col bg-gray-800 rounded-xl shadow-2xl p-8 border border-gray-700 min-h-[70vh]">
-            <div className="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
-                <h3 className="text-3xl font-extrabold text-white flex items-center">
-                    <Zap className="w-8 h-8 mr-3 text-blue-400 fill-blue-400/20" /> Detailed AI Feedback
-                </h3>
-                <button
-                    onClick={onClose}
-                    className="p-2 rounded-full bg-gray-700 text-gray-400 hover:bg-red-500 hover:text-white transition"
-                    aria-label="Close feedback"
-                >
-                    <X className="w-6 h-6" />
-                </button>
-            </div>
-            
-            {/* Overall Summary */}
-            <div className={`p-6 rounded-xl border-l-4 shadow-lg mb-6 border-blue-500 bg-blue-900/30`}>
-                <h4 className={`text-xl font-bold mb-2 ${summary.color}`}>
-                    <Star className="w-5 h-5 mr-2 inline-block" /> {summary.title}
-                </h4>
-                <p className="text-gray-300 text-base">{summary.content}</p>
-            </div>
+        <div className="flex space-x-2">
+            {[1, 2, 3, 4, 5].map((index) => (
+                <StarIcon
+                    key={index}
+                    selected={index <= rating}
+                    onClick={() => setRating(index)}
+                />
+            ))}
+        </div>
+    );
+};
 
-            {/* Metrics Snapshot */}
-            <h4 className="text-xl font-bold text-gray-200 mb-4 flex items-center">
-                <BarChart3 className="w-5 h-5 mr-2 text-blue-400" /> Week-at-a-Glance
+// --- New Component: System Performance Feedback Section ---
+const SystemPerformanceFeedback = () => (
+    <div className="bg-zinc-800 p-6 rounded-xl shadow-inner border border-zinc-700">
+        <h2 className="text-2xl font-bold text-blue-400 mb-4 flex items-center">
+            <BarChart3 className="w-6 h-6 mr-3" /> Your Weekly Performance Insight
+        </h2>
+        <p className="text-gray-400 mb-6">
+            This is automated feedback based on your task completion rate, time management, and AI usage this past week.
+        </p>
+
+        {/* Key Metrics */}
+        <div className="grid grid-cols-3 gap-4 mb-6 text-center">
+            <div className="bg-gray-700 p-3 rounded-lg border border-gray-600">
+                <p className="text-sm text-gray-400">Completion Rate</p>
+                <p className={`text-2xl font-bold ${mockPerformanceData.completionColor} flex items-center justify-center mt-1`}>
+                    {mockPerformanceData.completionRate}
+                    <TrendingUp className="w-4 h-4 ml-1" />
+                </p>
+            </div>
+            <div className="bg-gray-700 p-3 rounded-lg border border-gray-600">
+                <p className="text-sm text-gray-400">Time Saved (AI Prep)</p>
+                <p className="text-2xl font-bold text-blue-400 flex items-center justify-center mt-1">
+                    {mockPerformanceData.timeSaved}
+                    <Clock4 className="w-4 h-4 ml-1" />
+                </p>
+            </div>
+            <div className="bg-gray-700 p-3 rounded-lg border border-gray-600">
+                <p className="text-sm text-gray-400">Average Priority</p>
+                <p className="text-2xl font-bold text-yellow-400 mt-1">
+                    {mockPerformanceData.averagePriority}
+                </p>
+            </div>
+        </div>
+
+        {/* AI Growth Recommendation */}
+        <div className="bg-blue-900/30 p-4 rounded-lg border border-blue-700 mb-6">
+            <h4 className="font-semibold text-white mb-2 flex items-center">
+                <Lightbulb className="w-5 h-5 mr-2 text-blue-300" /> AI Growth Recommendation
             </h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                <MetricBadge 
-                    title="Completion Rate" 
-                    value={`${performanceData.completionRate}%`} 
-                    icon={<CheckCircle2 className="w-5 h-5" />} 
-                    color="text-green-400"
-                />
-                <MetricBadge 
-                    title="Tasks Completed" 
-                    value={performanceData.tasksCompleted} 
-                    icon={<TrendingUp className="w-5 h-5" />} 
-                    color="text-blue-400"
-                />
-                <MetricBadge 
-                    title="Time Saved (AI Prep)" 
-                    value={`${performanceData.timeSaved} hrs`} 
-                    icon={<Clock className="w-5 h-5" />} 
-                    color="text-yellow-400"
-                />
-                <MetricBadge 
-                    title="On-Time Delivery" 
-                    value={`${performanceData.onTimeDelivery}%`} 
-                    icon={<Target className="w-5 h-5" />} 
-                    color="text-purple-400"
-                />
-            </div>
+            <p className="text-gray-300 text-sm">
+                {mockPerformanceData.aiRecommendation}
+            </p>
+        </div>
 
-            {/* Growth Recommendation */}
-            <div className="bg-gray-700 p-6 rounded-xl border-l-4 border-yellow-500 shadow-lg mb-6">
-                <h4 className="text-xl font-bold text-yellow-400 mb-3 flex items-center">
-                    <Brain className="w-6 h-6 mr-2 text-yellow-500" /> Actionable Growth Strategy
+        {/* Strengths and Improvement Areas */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 rounded-lg bg-green-900/30 border border-green-700">
+                <h4 className="font-semibold text-green-300 mb-2 flex items-center">
+                    <ThumbsUp className="w-4 h-4 mr-2" /> Strengths
                 </h4>
-                <p className="text-gray-300 text-base">
-                    {recommendation}
-                </p>
+                <ul className="text-sm text-gray-300 list-disc pl-5 space-y-1">
+                    {mockPerformanceData.strengths.map((s, i) => <li key={i}>{s}</li>)}
+                </ul>
             </div>
-
-            {/* Mood Insight */}
-            <div className="bg-gray-700 p-6 rounded-xl border-l-4 border-purple-500 shadow-lg mb-8">
-                <h4 className="text-xl font-bold text-purple-400 mb-3 flex items-center">
-                    <BookOpen className="w-6 h-6 mr-2 text-purple-500" /> Wellbeing Insight
+            <div className="p-4 rounded-lg bg-orange-900/30 border border-orange-700">
+                <h4 className="font-semibold text-orange-300 mb-2 flex items-center">
+                    <Lightbulb className="w-4 h-4 mr-2" /> Improvement Areas
                 </h4>
-                <p className="text-gray-300 text-base">
-                    <span className="font-semibold text-white">Mood Logged: {performanceData.selectedMood ? performanceData.selectedMood.charAt(0).toUpperCase() + performanceData.selectedMood.slice(1) : 'N/A'}</span>
-                    <br/>
-                    {moodFeedback}
-                </p>
+                <ul className="text-sm text-gray-300 list-disc pl-5 space-y-1">
+                    {mockPerformanceData.improvementAreas.map((a, i) => <li key={i}>{a}</li>)}
+                </ul>
             </div>
+        </div>
+    </div>
+);
 
 
-            <div className="mt-auto pt-4 border-t border-gray-700">
-                <button
-                    onClick={onClose}
-                    className="w-full flex items-center justify-center space-x-2 py-3 bg-gray-700 text-gray-300 font-semibold rounded-lg hover:bg-gray-600 transition border border-gray-600"
-                >
-                    <X className="w-5 h-5" />
-                    <span>Return to Dashboard Overview</span>
-                </button>
+// --- Main Feedback Component ---
+const Feedback = () => {
+    const [rating, setRating] = useState(0);
+    const [feedbackText, setFeedbackText] = useState('');
+    const [viewMode, setViewMode] = useState<'rating' | 'feedback'>('rating'); // To control which section is active
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        console.log('Feedback Submitted:', { rating, feedbackText });
+        alert(`Thank you for your ${rating}-star feedback!`);
+        setRating(0);
+        setFeedbackText('');
+        setViewMode('rating');
+    };
+
+    return (
+        <div className="min-h-screen bg-zinc-900 text-white p-6 md:p-10 font-sans">
+            
+            <header className="mb-10">
+                <h1 className="text-4xl font-bold text-white mb-2">👋 User Feedback & System Insight</h1>
+                <p className="text-gray-400">Review your AI-generated performance feedback and share your thoughts to help us improve.</p>
+            </header>
+
+            <div className="flex flex-col lg:flex-row gap-8 max-w-6xl mx-auto">
+                
+                {/* 1. System Feedback Section (Performance Insights) */}
+                <div className="lg:w-2/3">
+                    <SystemPerformanceFeedback />
+                </div>
+                
+                {/* 2. User Input Form (Rating & Comments) */}
+                <div className="lg:w-1/3 bg-zinc-800 p-6 rounded-xl shadow-2xl h-fit sticky top-10 border border-zinc-700">
+                    <form onSubmit={handleSubmit}>
+                        
+                        <h2 className="text-xl font-semibold mb-4 text-white">Rate Your Experience Today</h2>
+                        
+                        {/* Rating Section */}
+                        <div className="mb-6">
+                            <StarRating rating={rating} setRating={setRating} />
+                            <p className="text-sm text-gray-400 mt-2">
+                                {rating === 0 && "Click a star to rate"}
+                                {rating === 1 && "Very Poor"}
+                                {rating === 2 && "Poor"}
+                                {rating === 3 && "Fair"}
+                                {rating === 4 && "Good"}
+                                {rating === 5 && "Excellent"}
+                            </p>
+                        </div>
+                        
+                        <hr className="border-gray-700 mb-6" />
+
+                        {/* Detailed Feedback Section */}
+                        <div className="mb-6">
+                            <label htmlFor="feedback" className="block text-md font-semibold mb-2">
+                                What are your thoughts on your performance?
+                            </label>
+                            <textarea
+                                id="feedback"
+                                rows="4"
+                                className="w-full bg-zinc-900 text-white p-3 rounded-lg border border-zinc-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-500 resize-none"
+                                placeholder="E.g., I found the AI recommendation for time blocking very helpful, but the completion rate metric felt inaccurate..."
+                                value={feedbackText}
+                                onChange={(e) => setFeedbackText(e.target.value)}
+                                required
+                            ></textarea>
+                        </div>
+
+                        {/* Submission Button */}
+                        <button
+                            type="submit"
+                            disabled={rating === 0 || feedbackText.length < 10}
+                            className={`w-full py-3 rounded-lg font-bold text-md transition duration-200 ${
+                                rating === 0 || feedbackText.length < 10
+                                    ? 'bg-blue-600/50 text-gray-400 cursor-not-allowed'
+                                    : 'bg-blue-600 text-white hover:bg-blue-700 shadow-md'
+                            }`}
+                        >
+                            Submit Feedback
+                        </button>
+                        <p className="text-xs text-center text-gray-500 mt-3">
+                            *Minimum 10 characters required to submit.
+                        </p>
+                    </form>
+                </div>
             </div>
         </div>
     );
 };
 
-export default AIFeedbackComponent;
+export default Feedback;
