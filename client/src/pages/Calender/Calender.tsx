@@ -95,7 +95,7 @@ const Calendar: React.FC = () => {
     const connectGoogleCalendar = () => {
         setIsLoading(true);
         const client = google.accounts.oauth2.initTokenClient({
-            client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+            client_id: '1021459374928-a1bg1c6g6h26tc2ui7ah4kp5e91b5mus.apps.googleusercontent.com',
             scope: "https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events",
             callback: (response : any) => {
                 setIsLoading(false);
