@@ -10,7 +10,7 @@ import { AuthProvider } from "./contexts/AuthProvider";
 import Landing from './pages/Landing/landing';
 import Layout from './components/layout';
 import Learn from './pages/learn/Learn';
-import Feedback from './pages/Feedback/feedback';
+import Calender from './pages/Calender/Calender';
 import Profile from './pages/Profile/Profile';
 import Dashboard from './pages/Dashboard/Dashboard';
 import SignInPage from './pages/SignIn/Signin';
@@ -41,21 +41,21 @@ function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/signin" element={<SignInPage />} />
             <Route path="/register" element={<Register />} />
-
+{/* 
             <Route element={<Layout/>}>
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard/></ProtectedRoute>} />
             <Route path="/learn" element={<ProtectedRoute><Learn/></ProtectedRoute>} />
             <Route path="/feedback" element={<ProtectedRoute><Feedback/></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile/></ProtectedRoute>} />
-            </Route>
+            </Route> */}
 
 
-            {/* <Route element={<Layout/>}>
+            <Route element={<Layout/>}>
             <Route path="/dashboard" element={<Dashboard/>} />
             <Route path="/learn" element={<Learn/>} />
-            <Route path="/feedback" element={<Feedback/>} />
+            <Route path="/calender" element={<Calender/>} />
             <Route path="/profile" element={<Profile/>} />
-            </Route> */}
+            </Route> 
 
 
             <Route path="*" element={<Navigate to="/signin" />} />
