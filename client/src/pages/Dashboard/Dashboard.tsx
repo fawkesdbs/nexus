@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import { 
-    Brain, Bell, Search, User, Calendar, 
-    MessageSquare, Plus, BarChart3, BookOpen,
-    Star, Lightbulb, ThumbsUp, TrendingUp,
-    CheckCircle2, Clock, Users, Send,
-    AlertCircle, Check, CalendarDays
+    Brain, Bell, Calendar, MessageSquare, Plus, BarChart3, BookOpen,
+    Star, Lightbulb, ThumbsUp, TrendingUp, CheckCircle2, Clock, Users, Send,
+    AlertCircle, Check, CalendarDays, MapPin, Eye, Download, Filter
 } from 'lucide-react';
 
 // --- Type Definitions ---
@@ -34,8 +32,28 @@ interface Mood {
     label: string;
 }
 
+interface Event {
+    id: string;
+    name: string;
+    venue: string;
+    date: string;
+    time: string;
+    type: 'meeting' | 'deadline' | 'training' | 'social';
+    attendees: number;
+    status: 'upcoming' | 'ongoing' | 'completed';
+}
+
+interface SummaryItem {
+    id: string;
+    category: string;
+    count: number;
+    change: number;
+    icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+    color: string;
+}
+
 // --- Static Data ---
-const initialTasks: Task[] = [
+const tasks: Task[] = [
     {
         id: '1',
         title: 'Client Report',
@@ -66,7 +84,7 @@ const initialTasks: Task[] = [
     }
 ];
 
-const meetingsData = { // Renamed to avoid collision with methods
+const meetings = {
     upcoming: {
         title: 'Client Presentation',
         time: 'Tomorrow, 10:00 AM',
@@ -193,10 +211,12 @@ const quickActions = [
     { icon: BookOpen, label: 'Learning Resources' }
 ];
 
-// Reusable components (TaskCard, NotificationItem) remain the same...
+// --- Reusable Components ---
+interface TaskCardProps {
+    task: Task;
+}
 
 const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
-    // ... (TaskCard implementation remains the same)
     const getPriorityStyles = (priority: string) => {
         switch (priority) {
             case 'high':
@@ -334,6 +354,7 @@ const Dashboard: React.FC = () => {
     const [selectedMood, setSelectedMood] = useState<string | null>(null);
     const [chatMessage, setChatMessage] = useState('');
     const [hasNewNotifications, setHasNewNotifications] = useState(true);
+    const [activeEventFilter, setActiveEventFilter] = useState('all');
 
     const handleMoodSelect = (mood: string) => {
         setSelectedMood(mood);
@@ -376,17 +397,6 @@ const Dashboard: React.FC = () => {
                         <h1 className="text-xl font-bold text-white">AI Task Coach</h1>
                     </div>
                     
-                    <div className="flex-1 max-w-md mx-6">
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                            <input 
-                                type="text" 
-                                placeholder="Ask AI..." 
-                                className="w-full py-2 px-4 pl-10 rounded-lg bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            />
-                        </div>
-                    </div>
-                    
                     <div className="flex items-center space-x-4">
                         <div className="relative">
                             <button 
@@ -399,82 +409,140 @@ const Dashboard: React.FC = () => {
                                 )}
                             </button>
                         </div>
-                        <div className="flex items-center space-x-2">
-                            <img 
-                                src="https://randomuser.me/api/portraits/men/32.jpg" 
-                                alt="User" 
-                                className="w-10 h-10 rounded-full border-2 border-gray-600"
-                            />
-                            <span className="text-gray-200 font-medium">Jacob</span>
-                        </div>
                     </div>
                 </div>
             </header>
 
             {/* Main Content */}
             <main className="container mx-auto px-4 py-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Column 1: Task Management */}
-                    <div className="md:col-span-1">
-                        <div className="bg-gray-800 rounded-xl shadow-lg p-5 mb-6 border border-gray-700">
+                {/* Summary Cards */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    {summaryData.map(item => (
+                        <SummaryCard key={item.id} item={item} />
+                    ))}
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Left Column - Task Management & Events */}
+                    <div className="lg:col-span-2 space-y-6">
+                        {/* Task Management */}
+                        <div className="bg-gray-800 rounded-xl shadow-lg p-5 border border-gray-700">
                             <h2 className="text-lg font-bold text-white mb-4 flex items-center">
                                 <CheckCircle2 className="w-5 h-5 text-blue-400 mr-2" />
                                 AI Task Prioritizer
                             </h2>
                             
-                            <div className="mb-6">
-                                <h3 className="text-md font-semibold text-gray-300 mb-3">Top 3 Tasks to Focus On</h3>
-                                {tasks.slice(0, 3).map(task => (
-                                    <TaskCard key={task.id} task={task} />
-                                ))}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <h3 className="text-md font-semibold text-gray-300 mb-3">Top 3 Tasks to Focus On</h3>
+                                    {tasks.slice(0, 3).map(task => (
+                                        <TaskCard key={task.id} task={task} />
+                                    ))}
+                                </div>
+                                
+                                <div>
+                                    <h3 className="text-md font-semibold text-gray-300 mb-3">At-Risk Tasks</h3>
+                                    {tasks.filter(task => task.priority === 'at-risk').map(task => (
+                                        <TaskCard key={task.id} task={task} />
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Events Calendar */}
+                        <div className="bg-gray-800 rounded-xl shadow-lg p-5 border border-gray-700">
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-lg font-bold text-white flex items-center">
+                                    <Calendar className="w-5 h-5 text-blue-400 mr-2" />
+                                    Upcoming Events
+                                </h2>
+                                <div className="flex items-center space-x-2">
+                                    <Filter className="w-4 h-4 text-gray-400" />
+                                    <select 
+                                        value={activeEventFilter}
+                                        onChange={(e) => setActiveEventFilter(e.target.value)}
+                                        className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        {eventFilters.map(filter => (
+                                            <option key={filter.key} value={filter.key}>{filter.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
                             
-                            <div>
-                                <h3 className="text-md font-semibold text-gray-300 mb-3">At-Risk Tasks</h3>
-                                {tasks.filter(task => task.priority === 'at-risk').map(task => (
-                                    <TaskCard key={task.id} task={task} />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {filteredEvents.map(event => (
+                                    <EventCard key={event.id} event={event} />
                                 ))}
                             </div>
                         </div>
-                        
+
+                        {/* Summary Table */}
                         <div className="bg-gray-800 rounded-xl shadow-lg p-5 border border-gray-700">
-                            <h2 className="text-lg font-bold text-white mb-4 flex items-center">
-                                <Calendar className="w-5 h-5 text-blue-400 mr-2" />
-                                Meeting Summary Assistant
-                            </h2>
-                            
-                            <div className="mb-4">
-                                <h3 className="text-md font-semibold text-gray-300 mb-2">Upcoming Meeting</h3>
-                                <div className="bg-blue-900/30 p-4 rounded-lg border border-blue-700">
-                                    <h4 className="font-bold text-white">{meetings.upcoming.title}</h4>
-                                    <p className="text-sm text-gray-300 mt-1">{meetings.upcoming.time}</p>
-                                    <p className="text-xs text-gray-400 mt-2">{meetings.upcoming.preparation}</p>
-                                </div>
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-lg font-bold text-white flex items-center">
+                                    <TrendingUp className="w-5 h-5 text-blue-400 mr-2" />
+                                    Performance Summary
+                                </h2>
+                                <button className="flex items-center space-x-2 text-sm text-gray-400 hover:text-white transition-colors">
+                                    <Download className="w-4 h-4" />
+                                    <span>Export</span>
+                                </button>
                             </div>
                             
-                            <div>
-                                <h3 className="text-md font-semibold text-gray-300 mb-2">Last Meeting Summary</h3>
-                                <div className="bg-gray-700 p-4 rounded-lg border border-gray-600">
-                                    <h4 className="font-bold text-white">{meetings.last.title}</h4>
-                                    <p className="text-sm text-gray-300 mt-1">{meetings.last.time}</p>
-                                    <div className="mt-2">
-                                        <p className="text-xs font-semibold text-gray-300">Key Decisions:</p>
-                                        <ul className="text-xs text-gray-400 list-disc pl-5 mt-1">
-                                            <li>Move deadline to Friday</li>
-                                            <li>Assign QA to Sarah</li>
-                                        </ul>
-                                    </div>
-                                </div>
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead>
+                                        <tr className="border-b border-gray-700">
+                                            <th className="text-left py-3 px-4 text-sm font-semibold text-gray-300">Metric</th>
+                                            <th className="text-left py-3 px-4 text-sm font-semibold text-gray-300">Current</th>
+                                            <th className="text-left py-3 px-4 text-sm font-semibold text-gray-300">Previous</th>
+                                            <th className="text-left py-3 px-4 text-sm font-semibold text-gray-300">Change</th>
+                                            <th className="text-left py-3 px-4 text-sm font-semibold text-gray-300">Trend</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr className="border-b border-gray-700/50 hover:bg-gray-700/30 transition-colors">
+                                            <td className="py-3 px-4 text-sm text-white">Task Completion Rate</td>
+                                            <td className="py-3 px-4 text-sm text-white">85%</td>
+                                            <td className="py-3 px-4 text-sm text-gray-400">78%</td>
+                                            <td className="py-3 px-4 text-sm text-green-400">+7%</td>
+                                            <td className="py-3 px-4 text-sm text-green-400">↑ Improving</td>
+                                        </tr>
+                                        <tr className="border-b border-gray-700/50 hover:bg-gray-700/30 transition-colors">
+                                            <td className="py-3 px-4 text-sm text-white">On-time Delivery</td>
+                                            <td className="py-3 px-4 text-sm text-white">92%</td>
+                                            <td className="py-3 px-4 text-sm text-gray-400">88%</td>
+                                            <td className="py-3 px-4 text-sm text-green-400">+4%</td>
+                                            <td className="py-3 px-4 text-sm text-green-400">↑ Improving</td>
+                                        </tr>
+                                        <tr className="border-b border-gray-700/50 hover:bg-gray-700/30 transition-colors">
+                                            <td className="py-3 px-4 text-sm text-white">Team Collaboration</td>
+                                            <td className="py-3 px-4 text-sm text-white">78%</td>
+                                            <td className="py-3 px-4 text-sm text-gray-400">82%</td>
+                                            <td className="py-3 px-4 text-sm text-red-400">-4%</td>
+                                            <td className="py-3 px-4 text-sm text-red-400">↓ Needs Attention</td>
+                                        </tr>
+                                        <tr className="hover:bg-gray-700/30 transition-colors">
+                                            <td className="py-3 px-4 text-sm text-white">Learning Progress</td>
+                                            <td className="py-3 px-4 text-sm text-white">65%</td>
+                                            <td className="py-3 px-4 text-sm text-gray-400">45%</td>
+                                            <td className="py-3 px-4 text-sm text-green-400">+20%</td>
+                                            <td className="py-3 px-4 text-sm text-green-400">↑ Excellent</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
-                    
-                    {/* Column 2: Learning & Growth */}
-                    <div className="md:col-span-1">
-                        <div className="bg-gray-800 rounded-xl shadow-lg p-5 mb-6 border border-gray-700">
+
+                    {/* Right Column - Sidebar */}
+                    <div className="space-y-6">
+                        {/* Mood & Productivity */}
+                        <div className="bg-gray-800 rounded-xl shadow-lg p-5 border border-gray-700">
                             <h2 className="text-lg font-bold text-white mb-4 flex items-center">
                                 <BarChart3 className="w-5 h-5 text-blue-400 mr-2" />
-                                Mood & Productivity Tracker
+                                Mood & Productivity
                             </h2>
                             
                             <div className="mb-4">
@@ -503,6 +571,7 @@ const Dashboard: React.FC = () => {
                             </div>
                         </div>
                         
+                        {/* Notifications */}
                         <div className="bg-gray-800 rounded-xl shadow-lg p-5 border border-gray-700">
                             <h2 className="text-lg font-bold text-white mb-4 flex items-center">
                                 <Bell className="w-5 h-5 text-blue-400 mr-2" />
@@ -515,93 +584,34 @@ const Dashboard: React.FC = () => {
                                 ))}
                             </div>
                         </div>
-                    </div>
-                    
-                    {/* Column 3: Performance & Feedback */}
-                    <div className="md:col-span-1">
-                        <div className="bg-gray-800 rounded-xl shadow-lg p-5 mb-6 border border-gray-700">
+
+                        {/* Meeting Summary */}
+                        <div className="bg-gray-800 rounded-xl shadow-lg p-5 border border-gray-700">
                             <h2 className="text-lg font-bold text-white mb-4 flex items-center">
-                                <Star className="w-5 h-5 text-blue-400 mr-2" />
-                                Performance Insights
+                                <Calendar className="w-5 h-5 text-blue-400 mr-2" />
+                                Meeting Summary
                             </h2>
                             
-                            <div className="bg-gray-700 p-4 rounded-lg border border-gray-600">
-                                <h3 className="font-bold text-white mb-2">Latest Performance Summary</h3>
-                                <div className="space-y-3">
-                                    <div>
-                                        <h4 className="font-semibold text-gray-300 flex items-center">
-                                            <Star className="w-4 h-4 text-yellow-400 mr-2" />
-                                            Key Achievements
-                                        </h4>
-                                        <ul className="text-sm text-gray-400 list-disc pl-6 mt-1">
-                                            <li>Completed client project ahead of schedule</li>
-                                            <li>Excellent teamwork on Project X</li>
-                                        </ul>
-                                    </div>
-                                    
-                                    <div>
-                                        <h4 className="font-semibold text-gray-300 flex items-center">
-                                            <Lightbulb className="w-4 h-4 text-blue-400 mr-2" />
-                                            Improvement Areas
-                                        </h4>
-                                        <ul className="text-sm text-gray-400 list-disc pl-6 mt-1">
-                                            <li>Time management for tight deadlines</li>
-                                            <li>Documentation of project processes</li>
-                                        </ul>
-                                    </div>
-                                    
-                                    <div>
-                                        <h4 className="font-semibold text-gray-300 flex items-center">
-                                            <ThumbsUp className="w-4 h-4 text-green-400 mr-2" />
-                                            Strengths
-                                        </h4>
-                                        <ul className="text-sm text-gray-400 list-disc pl-6 mt-1">
-                                            <li>Problem-solving abilities</li>
-                                            <li>Communication with clients</li>
-                                        </ul>
-                                    </div>
+                            <div className="mb-4">
+                                <h3 className="text-md font-semibold text-gray-300 mb-2">Upcoming Meeting</h3>
+                                <div className="bg-blue-900/30 p-4 rounded-lg border border-blue-700">
+                                    <h4 className="font-bold text-white">{meetings.upcoming.title}</h4>
+                                    <p className="text-sm text-gray-300 mt-1">{meetings.upcoming.time}</p>
+                                    <p className="text-xs text-gray-400 mt-2">{meetings.upcoming.preparation}</p>
                                 </div>
                             </div>
                             
-                            <button className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-sm font-medium transition duration-300">
-                                Request Detailed Feedback
-                            </button>
-                        </div>
-                        
-                        <div className="bg-gray-800 rounded-xl shadow-lg p-5 border border-gray-700">
-                            <h2 className="text-lg font-bold text-white mb-4 flex items-center">
-                                <TrendingUp className="w-5 h-5 text-blue-400 mr-2" />
-                                Weekly Progress
-                            </h2>
-                            
-                            <div className="space-y-3">
-                                <div className="flex items-center">
-                                    <div className="bg-green-500 p-2 rounded-lg mr-3">
-                                        <CheckCircle2 className="w-4 h-4 text-white" />
-                                    </div>
-                                    <div>
-                                        <h4 className="font-medium text-white">5 Tasks Completed</h4>
-                                        <p className="text-xs text-gray-400">This week</p>
-                                    </div>
-                                </div>
-                                
-                                <div className="flex items-center">
-                                    <div className="bg-blue-500 p-2 rounded-lg mr-3">
-                                        <Clock className="w-4 h-4 text-white" />
-                                    </div>
-                                    <div>
-                                        <h4 className="font-medium text-white">On-time Delivery</h4>
-                                        <p className="text-xs text-gray-400">80% of tasks</p>
-                                    </div>
-                                </div>
-                                
-                                <div className="flex items-center">
-                                    <div className="bg-purple-500 p-2 rounded-lg mr-3">
-                                        <Users className="w-4 h-4 text-white" />
-                                    </div>
-                                    <div>
-                                        <h4 className="font-medium text-white">Team Collaboration</h4>
-                                        <p className="text-xs text-gray-400">3 projects assisted</p>
+                            <div>
+                                <h3 className="text-md font-semibold text-gray-300 mb-2">Last Meeting</h3>
+                                <div className="bg-gray-700 p-4 rounded-lg border border-gray-600">
+                                    <h4 className="font-bold text-white">{meetings.last.title}</h4>
+                                    <p className="text-sm text-gray-300 mt-1">{meetings.last.time}</p>
+                                    <div className="mt-2">
+                                        <p className="text-xs font-semibold text-gray-300">Key Decisions:</p>
+                                        <ul className="text-xs text-gray-400 list-disc pl-5 mt-1">
+                                            <li>Move deadline to Friday</li>
+                                            <li>Assign QA to Sarah</li>
+                                        </ul>
                                     </div>
                                 </div>
                             </div>
@@ -610,7 +620,7 @@ const Dashboard: React.FC = () => {
                 </div>
             </main>
 
-            {/* Bottom Section */}
+            {/* Bottom Section - AI Assistant */}
             <div className="container mx-auto px-4 py-6">
                 <div className="bg-gray-800 rounded-xl shadow-lg p-5 border border-gray-700">
                     <h2 className="text-lg font-bold text-white mb-4 flex items-center">
